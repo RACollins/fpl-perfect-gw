@@ -45,12 +45,10 @@ def traceback_solution(data, t, n, k, w):
 def main():
     df = download_from_github(season="2023-24", gw=7)
 
-    # n_items_total, k_items_solution, max_weight = 100, 5, 100
     n_items_total = df.shape[0]
     k_items_solution = 15
     max_weight = 1000
 
-    # data = np.random.randint(0, max_weight+1, (n_items_total,2))
     data = df.loc[:, ["total_points", "value"]].values
 
     best_score = knapsack(data, n_items_total, k_items_solution, max_weight)
