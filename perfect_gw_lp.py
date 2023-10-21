@@ -112,36 +112,42 @@ def select_team(
 
     model.solve()
     print("Total expected score = {}".format(model.objective.value()))
+    decisions_bin = [int(d.value()) for d in decisions]
+    captain_decisions_bin = [int(d.value()) for d in captain_decisions]
+    sub_decisions_bin = [int(d.value()) for d in sub_decisions]
 
-    return decisions, captain_decisions, sub_decisions
+    return decisions_bin, captain_decisions_bin, sub_decisions_bin
 
 
 def main():
     df = download_from_github(season="2023-24", gw=8)
     df_reduced = df.loc[:, ["name", "position", "team", "total_points", "value"]]
-    decisions, captain_decisions, sub_decisions = select_team(
+    decisions_bin, captain_decisions_bin, sub_decisions_bin = select_team(
         expected_scores=df_reduced["total_points"],
         prices=df_reduced["total_points"],
         positions=df_reduced["position"],
         clubs=df_reduced["team"],
         total_budget=1000,
-        sub_factor=0.2,
+        sub_factor=0.0,
     )
-    decisions_bin, captain_decisions_bin, sub_decisions_bin = [], [], []
-    for i, d in enumerate(decisions):
-        cd = captain_decisions[i]
-        sd = sub_decisions[i]
-        decisions_bin.append(int(d.value()))
-        captain_decisions_bin.append(int(cd.value()))
-        sub_decisions_bin.append(int(sd.value()))
-    '''print("Squad:")
-    print(df_reduced.loc[np.array(decisions_bin).astype(bool), :])
-    print("Captain:")
-    print(df_reduced.loc[np.array(captain_decisions_bin).astype(bool), :])'''
+    df_reduced["selected"] = decisions_bin
+    df_reduced["captain"] = captain_decisions_bin
+    df_reduced["substitute"] = sub_decisions_bin
 
-    squad_df = pd.concat([df_reduced.loc[np.array(decisions_bin).astype(bool), :],
-                          df_reduced.loc[np.array(sub_decisions_bin).astype(bool), :]])
-    print(squad_df)
+    df_squad = df_reduced.loc[
+        (df_reduced["selected"] == 1) | (df_reduced["substitute"] == 1), :
+    ]
+    df_squad["actual_points"] = np.where(
+        df_squad.loc[:, "substitute"] == 1,
+        0,
+        np.where(
+            df_squad.loc[:, "captain"] == 1,
+            df_squad.loc[:, "total_points"] * 2,
+            df_squad.loc[:, "total_points"],
+        ),
+    )
+    print(df_squad)
+    print(df_squad.loc[:, ["value", "actual_points"]].sum())
     return None
 
 
