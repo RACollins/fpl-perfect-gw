@@ -1,5 +1,5 @@
 import numpy as np
-from download import download_from_github
+from src.data.download import download_from_github
 
 
 def knapsack(data, n, k, w):
