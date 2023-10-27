@@ -3,13 +3,9 @@ import numpy as np
 import pandas as pd
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)) + "/../..")
 
-for p in sys.path:
-    print(p)
-
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 from src.data.download import download_from_github
-
 
 
 def select_team(
