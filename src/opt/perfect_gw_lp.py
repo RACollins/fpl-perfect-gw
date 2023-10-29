@@ -3,14 +3,17 @@ import numpy as np
 import pandas as pd
 import sys
 import os
+import argparse
+
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../..")
 from src.data.download import download_from_github
 
 
 def select_team(
-    expected_scores, prices, positions, clubs, total_budget=100, sub_factor=0.2
+    expected_scores, prices, positions, clubs, total_budget, sub_factor
 ):
+    print(total_budget)
     num_players = len(expected_scores)
     model = pulp.LpProblem("Constrained value maximisation", pulp.LpMaximize)
     decisions = [
@@ -124,15 +127,22 @@ def select_team(
 
 
 def main():
-    df = download_from_github(season="2023-24", gw=8)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", "--season", type=str)
+    parser.add_argument("-gw", "--goal_week", type=int)
+    parser.add_argument("-tb", "--total_budget", type=float)
+    parser.add_argument("-sf", "--sub_factor", type=float, default=0.0)
+    args = parser.parse_args()
+
+    df = download_from_github(season=args.season, gw=args.goal_week)
     df_reduced = df.loc[:, ["name", "position", "team", "total_points", "value"]]
     decisions_bin, captain_decisions_bin, sub_decisions_bin = select_team(
         expected_scores=df_reduced["total_points"],
         prices=df_reduced["total_points"],
         positions=df_reduced["position"],
         clubs=df_reduced["team"],
-        total_budget=1000,
-        sub_factor=0.0,
+        total_budget=args.total_budget*10,
+        sub_factor=args.sub_factor,
     )
     df_reduced["selected"] = decisions_bin
     df_reduced["captain"] = captain_decisions_bin
